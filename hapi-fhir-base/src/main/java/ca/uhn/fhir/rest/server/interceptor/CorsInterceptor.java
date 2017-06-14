@@ -9,9 +9,9 @@ package ca.uhn.fhir.rest.server.interceptor;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,8 +72,13 @@ public class CorsInterceptor extends InterceptorAdapter {
 		retVal.addAllowedHeader("Accept");
 		retVal.addAllowedHeader("X-Requested-With");
 		retVal.addAllowedHeader("Content-Type");
+		retVal.addAllowedHeader("authorization");
+
 		retVal.addAllowedHeader("Access-Control-Request-Method");
 		retVal.addAllowedHeader("Access-Control-Request-Headers");
+		retVal.addAllowedMethod("OPTIONS");
+		retVal.addAllowedMethod("GET");
+
 		retVal.addAllowedOrigin("*");
 		retVal.addExposedHeader("Location");
 		retVal.addExposedHeader("Content-Location");
@@ -83,7 +88,7 @@ public class CorsInterceptor extends InterceptorAdapter {
 
 	/**
 	 * Constructor which accepts the given configuration
-	 * 
+	 *
 	 * @param theConfiguration
 	 *           The CORS configuration
 	 */
@@ -110,6 +115,8 @@ public class CorsInterceptor extends InterceptorAdapter {
 	@Override
 	public boolean incomingRequestPreProcessed(HttpServletRequest theRequest, HttpServletResponse theResponse) {
 		if (CorsUtils.isCorsRequest(theRequest)) {
+			System.out.println("it is a cors request");
+
 			boolean isValid;
 			try {
 				isValid = myCorsProcessor.processRequest(myConfig, theRequest, theResponse);
@@ -117,8 +124,12 @@ public class CorsInterceptor extends InterceptorAdapter {
 				throw new InternalErrorException(e);
 			}
 			if (!isValid || CorsUtils.isPreFlightRequest(theRequest)) {
+				System.out.println("invalid");
+
 				return false;
 			}
+			System.out.println("valid");
+
 		}
 
 		return super.incomingRequestPreProcessed(theRequest, theResponse);

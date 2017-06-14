@@ -1,6 +1,7 @@
 package ca.uhn.fhir.jpa.demo;
 
 import java.util.Properties;
+import java.util.HashMap;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
@@ -15,12 +16,22 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import org.mitre.openid.connect.client.service.impl.StaticServerConfigurationService;
+import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
+
+import org.mitre.openid.connect.config.ServerConfiguration;
+import org.mitre.oauth2.model.RegisteredClient;
+
+
+import ca.uhn.fhir.rest.server.security.OpenIdConnectBearerTokenServerInterceptor;
 import ca.uhn.fhir.jpa.config.BaseJavaConfigDstu3;
 import ca.uhn.fhir.jpa.dao.DaoConfig;
 import ca.uhn.fhir.jpa.util.SubscriptionsRequireManualActivationInterceptorDstu3;
 import ca.uhn.fhir.rest.server.interceptor.IServerInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
+import ca.uhn.fhir.rest.server.interceptor.CorsInterceptor;
+import java.sql.SQLException;
 
 /**
  * This is the primary configuration file for the example server
@@ -113,6 +124,40 @@ public class FhirServerConfig extends BaseJavaConfigDstu3 {
 	public IServerInterceptor subscriptionSecurityInterceptor() {
 		SubscriptionsRequireManualActivationInterceptorDstu3 retVal = new SubscriptionsRequireManualActivationInterceptorDstu3();
 		return retVal;
+	}
+
+	@Bean(autowire = Autowire.BY_TYPE)
+	public IServerInterceptor myCorsInterceptor() {
+		CorsInterceptor retVal = new CorsInterceptor();
+		return retVal;
+	}
+
+	@Bean(autowire = Autowire.BY_TYPE)
+	public StaticServerConfigurationService srv() {
+		StaticServerConfigurationService sr = new StaticServerConfigurationService();
+		sr.setServers(new HashMap<String, ServerConfiguration>());
+		ServerConfiguration srvCfg = new ServerConfiguration();
+		srvCfg.setIssuer("http://id.healthcreek.org/");
+		srvCfg.setJwksUri("http://id.healthcreek.org/jwk");
+		srvCfg.setTokenEndpointUri("http://id.healthcreek.org/token");
+		srvCfg.setAuthorizationEndpointUri("http://id.healthcreek.org/authorize");
+
+		sr.getServers().put("http://id.healthcreek.org/", srvCfg);
+		sr.afterPropertiesSet();
+
+		return sr;
+	}
+	@Bean()
+	public StaticClientConfigurationService cli() {
+		StaticClientConfigurationService cl = new StaticClientConfigurationService();
+		cl.setClients(new HashMap<String, RegisteredClient>());
+		cl.getClients().put("http://id.healthcreek.org/", new RegisteredClient());
+		return cl;
+	}
+
+	@Bean(autowire = Autowire.BY_TYPE)
+	public IServerInterceptor securityInterceptor() {
+		return new OpenIdConnectBearerTokenServerInterceptor();
 	}
 
 	@Bean()

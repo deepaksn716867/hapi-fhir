@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
+import java.io.BufferedReader;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +31,8 @@ import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.google.gson.stream.JsonWriter;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
@@ -59,9 +62,28 @@ import ca.uhn.fhir.to.model.ResourceRequest;
 import ca.uhn.fhir.to.model.TransactionRequest;
 import ca.uhn.fhir.util.ExtensionConstants;
 
+import org.apache.http.util.EntityUtils;
+import java.nio.charset.StandardCharsets;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.HttpEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import java.io.UnsupportedEncodingException;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import javax.servlet.http.HttpServletResponse;
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+import org.apache.http.HttpRequest;
+
+
+
+
 @org.springframework.stereotype.Controller()
 public class Controller extends BaseController {
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Controller.class);
+	private String authorizationServerLaunchEndpointURL = "http://id.healthcreek.org/Launch";
+	private String apiServerClientId = "82b330f7-1186-4059-8c31-62dce4b18d77";
+	private String apiServerClientSecret = "AKgTeRtUGHrr3Eu7HF0fJf6DfbrLTk2ieyeSpR0KUweizQWfqZICOYjHjUbXegMajNhTgQEKt5AZryb_5KAZTIs";
 
 	@RequestMapping(value = { "/about" })
 	public String actionAbout(HttpServletRequest theServletRequest, final HomeRequest theRequest, final ModelMap theModel) {
@@ -225,6 +247,51 @@ public class Controller extends BaseController {
 		return "home";
 	}
 
+	@RequestMapping(value = { "/_services/smart/Launch" })
+	public String actionTest(HttpServletRequest theServletRequest,  HttpServletResponse response, final HomeRequest theRequest, final BindingResult theBindingResult, final ModelMap theModel, @RequestBody String jsonString) throws IOException{
+		addCommonParams(theServletRequest, theRequest, theModel);
+		ourLog.info(theServletRequest.toString());
+		System.out.println(jsonString);
+		HttpPost postRequest = new HttpPost(this.authorizationServerLaunchEndpointURL);
+        postRequest.addHeader("Content-Type", "application/json");
+        StringEntity entity = null;
+        try {
+            entity = new StringEntity(jsonString);
+            postRequest.setEntity(entity);
+
+            setAuthorizationHeader(postRequest, apiServerClientId, apiServerClientSecret);
+        } catch (UnsupportedEncodingException uee_ex) {
+            throw new RuntimeException(uee_ex);
+        }
+
+        CloseableHttpClient httpClient = HttpClients.custom().build();
+
+        try (CloseableHttpResponse closeableHttpResponse = httpClient.execute(postRequest)) {
+            if (closeableHttpResponse.getStatusLine().getStatusCode() != 200) {
+                HttpEntity rEntity = closeableHttpResponse.getEntity();
+                String responseString = EntityUtils.toString(rEntity, StandardCharsets.UTF_8);
+                throw new RuntimeException(String.format("There was a problem with the registration the Launch Context.\n" +
+                                "Response Status : %s .\nResponse Detail :%s."
+                        , closeableHttpResponse.getStatusLine()
+                        , responseString));
+            }
+            response.setHeader("Content-Type", "application/json;charset=utf-8");
+            response.getWriter().write(EntityUtils.toString(closeableHttpResponse.getEntity()));
+        } catch (IOException io_ex) {
+            throw new RuntimeException(io_ex);
+        }
+
+		return "test";
+	}
+
+
+	protected static void setAuthorizationHeader(HttpRequest request, String clientId, String clientSecret) {
+         String authHeader = String.format("%s:%s", clientId, clientSecret == null ? "" : clientSecret);
+         String encoded = Base64.encode(authHeader.getBytes());
+         request.addHeader("Authorization", String.format("Basic %s", encoded));
+     }
+
+
 	@RequestMapping(value = { "/page" })
 	public String actionPage(HttpServletRequest theReq, HomeRequest theRequest, BindingResult theBindingResult, ModelMap theModel) {
 		addCommonParams(theReq, theRequest, theModel);
@@ -241,7 +308,7 @@ public class Controller extends BaseController {
 				return "result";
 			}
 		}
-		
+
 		url = url.replace("&amp;", "&");
 
 		ResultType returnsResource = ResultType.BUNDLE;

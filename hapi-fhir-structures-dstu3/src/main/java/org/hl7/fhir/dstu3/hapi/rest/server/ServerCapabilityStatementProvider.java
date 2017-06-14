@@ -10,9 +10,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,6 +51,8 @@ import org.hl7.fhir.dstu3.model.CapabilityStatement.SystemRestfulInteraction;
 import org.hl7.fhir.dstu3.model.CapabilityStatement.TypeRestfulInteraction;
 import org.hl7.fhir.dstu3.model.CapabilityStatement.UnknownContentCode;
 import org.hl7.fhir.dstu3.model.DateTimeType;
+import org.hl7.fhir.dstu3.model.UriType;
+
 import org.hl7.fhir.dstu3.model.Enumerations.PublicationStatus;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.OperationDefinition;
@@ -61,6 +63,11 @@ import org.hl7.fhir.dstu3.model.Reference;
 import org.hl7.fhir.dstu3.model.ResourceType;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+
+import org.hl7.fhir.dstu3.model.Extension;
+
+
+import org.hl7.fhir.dstu3.model.CapabilityStatement.CapabilityStatementRestSecurityComponent;
 
 import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.context.RuntimeResourceDefinition;
@@ -88,7 +95,7 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 
 /**
  * Server FHIR Provider which serves the conformance statement for a RESTful server implementation
- * 
+ *
  * <p>
  * Note: This class is safe to extend, but it is important to note that the same instance of {@link CapabilityStatement} is always returned unless {@link #setCache(boolean)} is called with a value of
  * <code>false</code>. This means that if you are adding anything to the returned conformance instance on each call you should call <code>setCache(false)</code> in your provider constructor.
@@ -187,10 +194,10 @@ public class ServerCapabilityStatementProvider implements IServerConformanceProv
 			retVal.append('s');
 		}
 		retVal.append('-');
-		
+
 		// Exclude the leading $
 		retVal.append(theMethodBinding.getName(), 1, theMethodBinding.getName().length());
-		
+
 		return retVal.toString();
 	}
 
@@ -226,8 +233,24 @@ public class ServerCapabilityStatementProvider implements IServerConformanceProv
 		retVal.addFormat(Constants.CT_FHIR_JSON_NEW);
 		retVal.setStatus(PublicationStatus.ACTIVE);
 
+
+
 		CapabilityStatementRestComponent rest = retVal.addRest();
 		rest.setMode(RestfulCapabilityMode.SERVER);
+
+		Extension ext = new Extension();
+		Extension token = new Extension();
+		Extension auth = new Extension();
+
+		ext.setUrl("http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris");
+		token.setUrl("token");
+		token.setValue(new UriType("http://id.healthcreek.org/token"));
+		auth.setUrl("authorize");
+		auth.setValue(new UriType("http://id.healthcreek.org/authorize"));
+		ext.addExtension(token);
+		ext.addExtension(auth);
+
+		rest.getSecurity().addExtension(ext);
 
 		Set<SystemRestfulInteraction> systemOps = new HashSet<SystemRestfulInteraction>();
 		Set<String> operationNames = new HashSet<String>();
@@ -449,7 +472,7 @@ public class ServerCapabilityStatementProvider implements IServerConformanceProv
 
 				CapabilityStatementRestResourceSearchParamComponent param = resource.addSearchParam();
 				param.setName(nextParamUnchainedName);
-				
+
 //				if (StringUtils.isNotBlank(chain)) {
 //					param.addChain(chain);
 //				}
@@ -526,7 +549,7 @@ public class ServerCapabilityStatementProvider implements IServerConformanceProv
 		op.setStatus(PublicationStatus.ACTIVE);
 		op.setKind(OperationKind.OPERATION);
 		op.setIdempotent(true);
-		
+
 		// We reset these to true below if we find a binding that can handle the level
 		op.setSystem(false);
 		op.setType(false);
@@ -604,14 +627,14 @@ public class ServerCapabilityStatementProvider implements IServerConformanceProv
 				op.setName(op.getCode());
 			}
 		}
-		
+
 		if (op.hasSystem() == false) {
 			op.setSystem(false);
 		}
 		if (op.hasInstance() == false) {
 			op.setInstance(false);
 		}
-		
+
 		return op;
 	}
 

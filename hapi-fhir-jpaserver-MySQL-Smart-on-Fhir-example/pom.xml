@@ -38,6 +38,13 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<dependency>
+				<groupId>ca.uhn.hapi.fhir</groupId>
+				<artifactId>hapi-fhir-oauth2</artifactId>
+				<version>2.5-SNAPSHOT</version>
+		</dependency>
+
+
 		<!-- At least one "structures" JAR must also be included -->
 		<dependency>
 			<groupId>ca.uhn.hapi.fhir</groupId>
