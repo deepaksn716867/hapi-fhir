@@ -54,7 +54,7 @@ public class OpenIdConnectBearerTokenServerInterceptor extends InterceptorAdapte
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(OpenIdConnectBearerTokenServerInterceptor.class);
 
 	@Autowired
-	private ClientConfigurationService myClientConfigurationService;
+	private StaticClientConfigurationService myClientConfigurationService;
 
 	@Autowired
 	private StaticServerConfigurationService myServerConfigurationService;
@@ -113,19 +113,19 @@ public class OpenIdConnectBearerTokenServerInterceptor extends InterceptorAdapte
 		String issuer = idClaims.getIssuer();
 
 		ServerConfiguration serverConfig = myServerConfigurationService.getServerConfiguration(issuer);
-/*
+
 		if (serverConfig == null) {
 			ourLog.error("No server configuration found for issuer: " + issuer);
 			throw new AuthenticationException("Not authorized (no server configuration found for issuer " + issuer + ")");
 		}
-*/
+
 		RegisteredClient clientConfig = myClientConfigurationService.getClientConfiguration(serverConfig);
-		/*
+
 		if (clientConfig == null) {
 			ourLog.error("No client configuration found for issuer: " + issuer);
 			throw new AuthenticationException("Not authorized (no client configuration found for issuer " + issuer + ")");
 		}
-*/
+
 		// check the signature
 		JWTSigningAndValidationService jwtValidator = null;
 
@@ -185,7 +185,7 @@ public class OpenIdConnectBearerTokenServerInterceptor extends InterceptorAdapte
 		return myTimeSkewAllowance;
 	}
 
-	public void setClientConfigurationService(ClientConfigurationService theClientConfigurationService) {
+	public void setClientConfigurationService(StaticClientConfigurationService theClientConfigurationService) {
 		myClientConfigurationService = theClientConfigurationService;
 	}
 

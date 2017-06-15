@@ -79,6 +79,17 @@
 			<classifier>classes</classifier>
 			<scope>provided</scope>
 		</dependency>
+		<!-- Used for CORS support -->
+		<dependency>
+			<groupId>org.ebaysf.web</groupId>
+			<artifactId>cors-filter</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>servlet-api</artifactId>
+					<groupId>javax.servlet</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<!-- HAPI-FHIR uses Logback for logging support. The logback library is included automatically by Maven as a part of the hapi-fhir-base dependency, but you also need to include a logging library. Logback
 			is used here, but log4j would also be fine. -->

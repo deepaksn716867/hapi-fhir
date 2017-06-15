@@ -134,12 +134,13 @@ public class FhirServerConfigDstu3 extends BaseJavaConfigDstu3 {
 			StaticServerConfigurationService sr = new StaticServerConfigurationService();
 			sr.setServers(new HashMap<String, ServerConfiguration>());
 			ServerConfiguration srvCfg = new ServerConfiguration();
-			srvCfg.setIssuer("http://id.healthcreek.org/");
+			srvCfg.setIssuer("http://id.healthcreek.org");
 			srvCfg.setJwksUri("http://id.healthcreek.org/jwk");
 			srvCfg.setTokenEndpointUri("http://id.healthcreek.org/token");
 			srvCfg.setAuthorizationEndpointUri("http://id.healthcreek.org/authorize");
 
-			sr.getServers().put("http://id.healthcreek.org/", srvCfg);
+			sr.getServers().put("http://id.healthcreek.org", srvCfg);
+
 			sr.afterPropertiesSet();
 
 			return sr;
@@ -148,7 +149,7 @@ public class FhirServerConfigDstu3 extends BaseJavaConfigDstu3 {
 	public StaticClientConfigurationService cli() {
 			StaticClientConfigurationService cl = new StaticClientConfigurationService();
 			cl.setClients(new HashMap<String, RegisteredClient>());
-			cl.getClients().put("http://id.healthcreek.org/", new RegisteredClient());
+			cl.getClients().put("http://id.healthcreek.org", new RegisteredClient());
 			return cl;
 	}
 
