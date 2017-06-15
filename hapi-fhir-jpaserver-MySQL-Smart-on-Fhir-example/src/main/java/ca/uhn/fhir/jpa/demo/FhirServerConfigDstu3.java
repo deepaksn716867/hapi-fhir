@@ -79,7 +79,7 @@ public class FhirServerConfigDstu3 extends BaseJavaConfigDstu3 {
 
 		try
 		{
-			retVal.setDriver(new com.mysql.jdbc.Driver());
+			retVal.setDriver(new com.mysql.cj.jdbc.Driver());
 		}
 		catch (SQLException e) {
 			// TODO Auto-generated catch block
