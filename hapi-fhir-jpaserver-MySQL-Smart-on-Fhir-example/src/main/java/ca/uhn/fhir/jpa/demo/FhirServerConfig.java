@@ -29,7 +29,6 @@ import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationSer
 import org.mitre.openid.connect.config.ServerConfiguration;
 import org.mitre.oauth2.model.RegisteredClient;
 
-
 import ca.uhn.fhir.rest.server.security.OpenIdConnectBearerTokenServerInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.CorsInterceptor;
 import java.sql.SQLException;
