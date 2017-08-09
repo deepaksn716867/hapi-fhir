@@ -200,6 +200,17 @@
 
 		<!-- Tells Maven to name the generated WAR file as hapi-fhir-jpaserver-example.war -->
 		<finalName>hapi-fhir-jpaserver-MySQL-example</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
 
 		<!-- The following is not required for the application to build, but allows you to test it by issuing "mvn jetty:run" from the command line. -->
 		<pluginManagement>
